@@ -4,4 +4,5 @@ Flask-SQLAlchemy
 Flask-WTF
 WTForms
 requests
+openai
 bcrypt
