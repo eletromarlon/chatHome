@@ -21,7 +21,7 @@ def enviar_mensagem_modelo(mensagem, especialista_id):
 
         # Envia a requisição para o modelo de chat
         response = client.chat.completions.create(
-            model=modelo.nome,
+            model="gpt-3.5-turbo",#modelo.nome,
             messages=[
                 {"role": "system", "content": especialista.prompt_base},
                 {"role": "user", "content": mensagem}
