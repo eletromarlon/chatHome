@@ -5,4 +5,5 @@ Flask-WTF
 WTForms
 requests
 openai
+email-validator
 bcrypt

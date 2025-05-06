@@ -17,6 +17,7 @@ eggs/
 .eggs/
 lib/
 bin/
+include
 lib64/
 lib64
 parts/
