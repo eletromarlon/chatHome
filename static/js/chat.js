@@ -39,8 +39,8 @@ document.getElementById('form-chat').addEventListener('submit', function (e) {
 function adicionarMensagem(texto, usuario) {
     const chat = document.getElementById('chat');
     const mensagem = document.createElement('div');
-    mensagem.className = usuario ? 'text-end mb-2' : 'text-start mb-2';
-    mensagem.innerHTML = `<span class="badge bg-${usuario ? 'primary' : 'secondary'}">${texto}</span>`;
+    mensagem.className = usuario ? 'text-end mb-2 w-75 ms-auto' : 'text-start mb-2 w-75 me-auto';
+    mensagem.innerHTML = `<span class="alert alert-primary text-break d-block bg-${usuario ? 'primary' : 'secondary'}">${texto}</span>`;
     chat.appendChild(mensagem);
     chat.scrollTop = chat.scrollHeight;
 }
