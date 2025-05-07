@@ -7,3 +7,4 @@ requests
 openai
 email-validator
 bcrypt
+groq

@@ -1,5 +1,5 @@
 from models import Specialist, Model
-import requests, openai
+import requests, openai, groq
 
 def listar_especialistas():
     especialistas = Specialist.query.all()
@@ -30,6 +30,22 @@ def enviar_mensagem_modelo(mensagem, especialista_id):
         # Extrai e retorna o conteúdo da resposta
         resposta = response.choices[0].message.content
         return resposta
+    
+    elif modelo.tipo == 'deepseaker':
+        client = groq.Groq(api_key=modelo.api_key)
+        model="deepseek-r1-distill-llama-70b"
+    
+        chat_completion = client.chat.completions.create(
+            messages=[
+            {"role": "system", "content": especialista.prompt_base},
+            {"role": "user","content": mensagem}
+            ],
+            model=model
+            )
+        
+        resposta = chat_completion.choices[0].message.content
+        resposta = resposta[resposta.find('```'):]
+        return resposta
     elif modelo.tipo == 'anthropic':
         # Aqui você implementaria a chamada para o modelo da Anthropic
         # Exemplo fictício:
@@ -50,21 +66,6 @@ def enviar_mensagem_modelo(mensagem, especialista_id):
             return resposta
         else:
             return "Erro ao chamar o modelo da Anthropic."
-    elif modelo.tipo == 'deepseaker':
-        # Aqui você implementaria a chamada para o modelo da DeepSeaker
-        # Exemplo fictício:
-        headers = {
-            'Authorization': f'Bearer {modelo.api_key}',
-            'Content-Type': 'application/json'
-        }
-        data = {
-            'model': modelo.nome,
-            'messages': [
-                {"role": "system", "content": especialista.prompt_base},
-                {"role": "user", "content": mensagem}
-            ]
-        }
-        response = requests.post(modelo.endpoint, headers=headers, json=data)
     else:
         # Aqui você adicionaria outros tipos (Ex: huggingface, modelos locais)
         return "Modelo não suportado ainda."
