@@ -1,10 +1,14 @@
-from models import Specialist, Model
+from models import Specialist, Model, Message
 import requests, openai, groq
 
 def listar_especialistas():
     especialistas = Specialist.query.all()
     print(f"Lista de Especialistas: {[especialista.nome for especialista in especialistas]}")
     return especialistas
+
+def listar_messages():
+    messages = Message.query.all()
+    return messages
 
 def enviar_mensagem_modelo(mensagem, especialista_id):
     especialista = Specialist.query.get(especialista_id)

@@ -9,16 +9,34 @@
 <body>
 <div class="container-fluid">
     <div class="row vh-100">
-        <div class="col-2 bg-light p-3" id="historico">
+        <div div class="col-2 bg-light p-3">
+            <form action="{{ url_for('chat') }}" method="get">
+                <button type="submit" name="nova" value="1" class="btn btn-primary w-100 mb-3">
+                    Nova conversa
+                </button>
+            </form>
             <h5>Histórico</h5>
-            <ul id="historico-lista" class="list-group"></ul>
+            <ul class="list-group">
+                {% for conversa_id, data in historico %}
+                <li class="list-group-item {% if session['conversation_id'] == conversa_id %}active{% endif %}">
+                    <form action="{{ url_for('chat') }}" method="post" class="d-inline">
+                        <input type="hidden" name="carregar_conversa" value="{{ conversa_id }}">
+                        <button type="submit" class="btn btn-link text-decoration-none p-0">
+                            {{ data.strftime('%d/%m %H:%M') }}
+                        </button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
         </div>
         <div class="col-8 d-flex flex-column p-3">
             <div id="chat" class="flex-grow-1 border rounded p-3 mb-3"></div>
-            <form id="form-chat" class="d-flex">
-                <input type="text" id="mensagem" class="form-control me-2" placeholder="Digite sua mensagem">
-                <button class="btn btn-primary">Enviar</button>
-            </form>
+            <div class="row">
+                <form id="form-chat" class="d-flex">
+                    <input type="text" id="mensagem" class="form-control me-2" placeholder="Digite sua mensagem">
+                    <button class="btn btn-primary">Enviar</button>
+                </form>
+            </div>
         </div>
         <div class="col-2 bg-light p-3" id="especialistas">
             <h5>Especialistas</h5>

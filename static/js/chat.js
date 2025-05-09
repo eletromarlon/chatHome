@@ -40,7 +40,7 @@ function adicionarMensagem(texto, usuario) {
     const chat = document.getElementById('chat');
     const mensagem = document.createElement('div');
     mensagem.className = usuario ? 'text-end mb-2 w-75 ms-auto' : 'text-start mb-2 w-75 me-auto';
-    mensagem.innerHTML = `<span class="alert alert-primary text-break d-block bg-${usuario ? 'primary' : 'secondary'}">${texto}</span>`;
+    mensagem.innerHTML = `<span class="alert text-break d-block alert-${usuario ? 'primary' : 'secondary'}">${texto}</span>`;
     chat.appendChild(mensagem);
     chat.scrollTop = chat.scrollHeight;
 }

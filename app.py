@@ -1,10 +1,11 @@
-from flask import Flask, render_template, redirect, url_for, request, flash, jsonify
+from flask import Flask, render_template, redirect, url_for, request, flash, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from models import db, User, Message, Specialist, Model
 from forms import LoginForm, RegisterForm, EspecialistaForm, ModeloForm
-from utils import enviar_mensagem_modelo, listar_especialistas
-import bcrypt
+from utils import enviar_mensagem_modelo, listar_especialistas, listar_messages
+from forms import ModeloForm
+import bcrypt, uuid
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'sua_chave_secreta_aqui'
@@ -36,8 +37,6 @@ def login():
         else:
             flash('Email ou senha incorretos.')
     return render_template('login.html', form=form)
-
-from forms import ModeloForm
 
 @app.route('/cadastro_modelo', methods=['GET', 'POST'])
 @login_required  # Se quiser restringir a usuários logados
@@ -109,11 +108,75 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-@app.route('/chat')
+@app.route("/chat", methods=["GET", "POST"])
 @login_required
 def chat():
-    especialistas = listar_especialistas()
-    return render_template('chat.html', especialistas=especialistas)
+
+    if request.method == "POST" and "carregar_conversa" in request.form:
+        session["conversation_id"] = request.form["carregar_conversa"]
+
+    user_id = current_user.id
+
+    # Criar nova conversa se for GET com ?nova=1 ou não houver conversa ativa
+    if request.args.get("nova") or "conversation_id" not in session:
+        session["conversation_id"] = str(uuid.uuid4())
+
+    conversation_id = session["conversation_id"]
+
+    # Envio de mensagem
+    if request.method == "POST":
+        content = request.form["mensagem"]
+        specialist_id = request.form.get("specialist_id")
+
+        # Salvar mensagem do usuário
+        user_msg = Message(
+            user_id=user_id,
+            specialist_id=specialist_id,
+            content=content,
+            role="user",
+            conversation_id=conversation_id
+        )
+        db.session.add(user_msg)
+
+        # Simula resposta do modelo (substitua por chamada à API real)
+        #resposta = responder_com_modelo(content, specialist_id)
+        resposta = enviar_mensagem_modelo(content, specialist_id)
+
+        # Salvar resposta
+        ai_msg = Message(
+            user_id=user_id,
+            specialist_id=specialist_id,
+            content=resposta,
+            role="assistant",
+            conversation_id=conversation_id
+        )
+        db.session.add(ai_msg)
+        db.session.commit()
+
+    # Buscar especialistas
+    especialistas = Specialist.query.all()
+
+    # Buscar mensagens da conversa atual
+    mensagens = Message.query.filter_by(
+        user_id=user_id,
+        conversation_id=conversation_id
+    ).order_by(Message.timestamp).all()
+
+    # Buscar histórico de conversas anteriores do usuário
+    historico = (
+        db.session.query(Message.conversation_id, db.func.min(Message.timestamp))
+        .filter_by(user_id=user_id)
+        .group_by(Message.conversation_id)
+        .order_by(db.func.min(Message.timestamp).desc())
+        .all()
+    )
+
+    return render_template(
+        "chat.html",
+        especialistas=especialistas,
+        mensagens=mensagens,
+        historico=historico
+    )
 
 @app.route('/api/send_message', methods=['POST'])
 @login_required
