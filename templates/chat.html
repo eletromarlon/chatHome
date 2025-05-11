@@ -21,7 +21,7 @@
                 <li class="list-group-item {% if session['conversation_id'] == conversa_id %}active{% endif %}">
                     <form action="{{ url_for('chat') }}" method="post" class="d-inline">
                         <input type="hidden" name="carregar_conversa" value="{{ conversa_id }}">
-                        <button type="submit" class="btn btn-link text-decoration-none p-0">
+                        <button type="submit" class="btn btn-link text-decoration-none link-dark p-0">
                             {{ data.strftime('%d/%m %H:%M') }}
                         </button>
                     </form>
@@ -30,10 +30,18 @@
             </ul>
         </div>
         <div class="col-8 d-flex flex-column p-3">
-            <div id="chat" class="flex-grow-1 border rounded p-3 mb-3"></div>
+            <div id="chat" class="flex-grow-1 border rounded p-3 mb-3">
+                {% for msg in mensagens %}
+                    <div class="{{ 'text-end mb-2 w-75 ms-auto' if msg.role == 'user' else 'text-start mb-2 w-75 me-auto' }}">
+                        <span class="alert text-break d-block alert-{{ 'primary' if msg.role == 'user' else 'secondary' }}">
+                            {{ msg.content }}
+                        </span>
+                    </div>
+                {% endfor %}
+            </div>
             <div class="row">
                 <form id="form-chat" class="d-flex">
-                    <input type="text" id="mensagem" class="form-control me-2" placeholder="Digite sua mensagem">
+                    <input type="text" name="mensagem" id="mensagem" class="form-control me-2" placeholder="Digite sua mensagem">
                     <button class="btn btn-primary">Enviar</button>
                 </form>
             </div>

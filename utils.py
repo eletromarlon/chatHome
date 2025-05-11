@@ -11,6 +11,7 @@ def listar_messages():
     return messages
 
 def enviar_mensagem_modelo(mensagem, especialista_id):
+    print(f"Enviou mensagens ao modelo: {mensagem}")
     especialista = Specialist.query.get(especialista_id)
     modelo = Model.query.filter_by(nome=especialista.modelo_preferido).first()
 
@@ -33,11 +34,13 @@ def enviar_mensagem_modelo(mensagem, especialista_id):
 
         # Extrai e retorna o conteúdo da resposta
         resposta = response.choices[0].message.content
+        print(f"Resposta do modelo: {resposta}")
         return resposta
     
     elif modelo.tipo == 'deepseaker':
         client = groq.Groq(api_key=modelo.api_key)
-        model="deepseek-r1-distill-llama-70b"
+        #model="deepseek-r1-distill-llama-70b"
+        model = modelo.nome
     
         chat_completion = client.chat.completions.create(
             messages=[

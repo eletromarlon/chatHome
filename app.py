@@ -111,36 +111,42 @@ def logout():
 @app.route("/chat", methods=["GET", "POST"])
 @login_required
 def chat():
-
-    if request.method == "POST" and "carregar_conversa" in request.form:
-        session["conversation_id"] = request.form["carregar_conversa"]
-
     user_id = current_user.id
 
-    # Criar nova conversa se for GET com ?nova=1 ou não houver conversa ativa
+    print(f"ID do usuer {user_id}, da conversa {session.get('conversation_id')}")
+
+    # Se for requisição GET com parâmetro nova=1 ou não tiver conversa ativa
     if request.args.get("nova") or "conversation_id" not in session:
         session["conversation_id"] = str(uuid.uuid4())
 
     conversation_id = session["conversation_id"]
 
-    # Envio de mensagem
-    if request.method == "POST":
-        content = request.form["mensagem"]
-        specialist_id = request.form.get("specialist_id")
+    # ----- TRATAMENTO DE POST: CARREGAMENTO DE HISTÓRICO -----
+    if request.method == "POST" and request.content_type != "application/json":
+        conversa_id = request.form.get("carregar_conversa")
+        print("tentou carregar conversa", conversa_id)
+        if conversa_id:
+            session["conversation_id"] = conversa_id
+            return redirect(url_for("chat"))
+
+    # ----- TRATAMENTO DE POST: ENVIO DE MENSAGEM JSON -----
+    elif request.method == "POST" and request.content_type == "application/json":
+        content = request.get_json()
+        user_message = content.get("message")
+        specialist_id = content.get("especialista_id")
 
         # Salvar mensagem do usuário
         user_msg = Message(
             user_id=user_id,
             specialist_id=specialist_id,
-            content=content,
+            content=user_message,
             role="user",
             conversation_id=conversation_id
         )
         db.session.add(user_msg)
 
-        # Simula resposta do modelo (substitua por chamada à API real)
-        #resposta = responder_com_modelo(content, specialist_id)
-        resposta = enviar_mensagem_modelo(content, specialist_id)
+        # Chamada simulada ao modelo (ou real via API)
+        resposta = enviar_mensagem_modelo(user_message, specialist_id)
 
         # Salvar resposta
         ai_msg = Message(
@@ -153,14 +159,16 @@ def chat():
         db.session.add(ai_msg)
         db.session.commit()
 
+        return jsonify({"response": resposta})  # <- retorna resposta ao fetch()
+
     # Buscar especialistas
     especialistas = Specialist.query.all()
 
     # Buscar mensagens da conversa atual
     mensagens = Message.query.filter_by(
-        user_id=user_id,
-        conversation_id=conversation_id
+        conversation_id=session["conversation_id"]
     ).order_by(Message.timestamp).all()
+
 
     # Buscar histórico de conversas anteriores do usuário
     historico = (
@@ -178,12 +186,15 @@ def chat():
         historico=historico
     )
 
+
 @app.route('/api/send_message', methods=['POST'])
 @login_required
 def send_message():
     data = request.get_json()
     user_message = data.get('message')
     especialista_id = data.get('especialista_id')
+
+    print("veio para cá")
 
     resposta = enviar_mensagem_modelo(user_message, especialista_id)
 
@@ -201,6 +212,7 @@ def send_message():
 @app.route('/api/load_history', methods=['GET'])
 @login_required
 def load_history():
+    print(f"Conteudo de get: {request.args}")
     mensagens = Message.query.filter_by(user_id=current_user.id).order_by(Message.timestamp.asc()).all()
     historico = [{'pergunta': m.user_message, 'resposta': m.model_response} for m in mensagens]
     return jsonify(historico)

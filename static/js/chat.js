@@ -1,14 +1,14 @@
 let especialistaSelecionado = null;
 
 // Carrega histórico na inicialização
-fetch('/api/load_history')
-    .then(response => response.json())
-    .then(data => {
-        data.forEach(mensagem => {
-            adicionarMensagem(mensagem.pergunta, true);
-            adicionarMensagem(mensagem.resposta, false);
-        });
-    });
+//fetch('/chat')
+ //   .then(response => response.json())
+ //   .then(data => {
+ //       data.forEach(mensagem => {
+ //           adicionarMensagem(mensagem.pergunta, true);
+  //          adicionarMensagem(mensagem.resposta, false);
+   //     });
+   // });
 
 document.getElementById('form-chat').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -21,7 +21,7 @@ document.getElementById('form-chat').addEventListener('submit', function (e) {
 
     adicionarMensagem(texto, true);
 
-    fetch('/api/send_message', {
+    fetch('/chat', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
