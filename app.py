@@ -5,12 +5,13 @@ from models import db, User, Message, Specialist, Model
 from forms import LoginForm, RegisterForm, EspecialistaForm, ModeloForm
 from utils import enviar_mensagem_modelo, listar_especialistas, listar_messages
 from forms import ModeloForm
+from sqlalchemy.orm import aliased
 import bcrypt, uuid
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'sua_chave_secreta_aqui'
 # Coloca o banco dentro de var/app-instance
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///teste.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///init_test.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
 db.init_app(app)
@@ -170,14 +171,36 @@ def chat():
     ).order_by(Message.timestamp).all()
 
 
-    # Buscar histórico de conversas anteriores do usuário
-    historico = (
-        db.session.query(Message.conversation_id, db.func.min(Message.timestamp))
-        .filter_by(user_id=user_id)
+    # Subquery para pegar a primeira mensagem de cada conversa
+    first_messages = (
+        db.session.query(
+            Message.conversation_id,
+            db.func.min(Message.timestamp).label("min_time")
+        )
+        .filter_by(user_id=user_id, role="user")
         .group_by(Message.conversation_id)
-        .order_by(db.func.min(Message.timestamp).desc())
+        .subquery()
+    )
+
+    # Alias da tabela Message para fazer join
+    M1 = aliased(Message)
+
+    # Join para pegar conteúdo da primeira mensagem
+    historico = (
+        db.session.query(
+            M1.conversation_id,
+            M1.timestamp,
+            M1.content
+        )
+        .join(first_messages, db.and_(
+            M1.conversation_id == first_messages.c.conversation_id,
+            M1.timestamp == first_messages.c.min_time
+        ))
+        .order_by(M1.timestamp.desc())
         .all()
     )
+
+    print(f"Historico: {historico}")
 
     return render_template(
         "chat.html",

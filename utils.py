@@ -73,6 +73,25 @@ def enviar_mensagem_modelo(mensagem, especialista_id):
             return resposta
         else:
             return "Erro ao chamar o modelo da Anthropic."
+    elif modelo.tipo == 'outro':
+        client = groq.Groq(api_key=modelo.api_key)
+
+        model = "meta-llama/llama-4-scout-17b-16e-instruct"#modelo.nome
+
+        print(f"Modelo enviado {modelo.nome}")
+    
+        chat_completion = client.chat.completions.create(
+            messages=[
+            {"role": "system", "content": especialista.prompt_base},
+            {"role": "user","content": mensagem}
+            ],
+            model=model
+            )
+        try:
+            resposta = chat_completion.choices[0].message.content
+        except:
+            resposta = "Modelo não retornou resposta."
+        return resposta
     else:
         # Aqui você adicionaria outros tipos (Ex: huggingface, modelos locais)
         return "Modelo não suportado ainda."
